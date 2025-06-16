@@ -73,4 +73,3 @@ class Exponential:
         lambtha = self.lambtha
         cdf = 1 - (e ** (-lambtha * x))
         return cdf
-    
