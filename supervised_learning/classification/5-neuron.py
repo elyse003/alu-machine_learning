@@ -129,5 +129,4 @@ class Neuron:
         dw = (1/m) * np.matmul(dz, X.T)
         db = np.mean(dz)
         self.__W -= alpha * dw
-        self.__b -= alpha * db
-        
+        self.__b -= alpha * db        

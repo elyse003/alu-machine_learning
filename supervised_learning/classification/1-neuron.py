@@ -60,5 +60,4 @@ class Neuron:
         """
         Getter of the activated output
         """
-        return self.__A
-    
+        return self.__A 
