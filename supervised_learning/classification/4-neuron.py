@@ -110,4 +110,4 @@ class Neuron:
         A = self.forward_prop(X)
         cost = self.cost(Y, A)
         pred = np.where(A > 0.5, 1, 0)
-        return (pred, cost)    
+        return (pred, cost)  

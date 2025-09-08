@@ -69,4 +69,4 @@ class DeepNeuralNetwork:
             Z = np.matmul(W, A) + b
             self.__cache["A{}".format(i + 1)] = 1 / (1 + np.exp(-Z))
 
-        return self.__cache["A{}".format(self.__L)], self.__cache    
+        return self.__cache["A{}".format(self.__L)], self.__cache
