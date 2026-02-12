@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-
 """
-This module contains a function that perfoms
-expectation maximization for a GMM
+Expectation Maximization for a Gaussian Mixture Model
 """
 
 import numpy as np
@@ -11,26 +9,9 @@ expectation = __import__('6-expectation').expectation
 maximization = __import__('7-maximization').maximization
 
 
-def expectation_maximization(X, k,
-                             iterations=1000, tol=1e-5, verbose=False):
+def expectation_maximization(X, k, iterations=1000, tol=1e-5, verbose=False):
     """
-    initializes variables for a Gaussian Mixture Model
-
-    X: numpy.ndarray (n, d) containing the dataset
-        - n no. of data points
-        - d no. of dimensions for each data point
-    k: positive integer containing the number of clusters
-    iterations: positive integer containing the maximum number of iterations
-    tol: non-negative float containing tolerance of the log likelihood
-    verbose: boolean that determines if output should be printed
-    returns:
-        pi, m, S, g, l or None, None, None, None, None on failure
-        - pi: numpy.ndarray (k,) containing the priors for each cluster
-        - m: numpy.ndarray (k, d) containing centroid means for each cluster
-        - S: numpy.ndarray (k, d, d) covariance matrices for each cluster
-        - g: numpy.ndarray (k, n) containing the posterior
-            probabilities for each data point in each cluster
-        - l: log likelihood of the model
+    Performs expectation maximization for a GMM
     """
     if not isinstance(X, np.ndarray) or len(X.shape) != 2:
         return None, None, None, None, None
@@ -43,21 +24,26 @@ def expectation_maximization(X, k,
     if not isinstance(verbose, bool):
         return None, None, None, None, None
 
+    # Initialize parameters
     pi, m, S = initialize(X, k)
-    g, l = expectation(X, pi, m, S)
-    prev_like = i = 0
+    g, log_like = expectation(X, pi, m, S)
+    prev_like = log_like
+
     msg = "Log Likelihood after {} iterations: {}"
 
     for i in range(iterations):
-        if verbose and i % 10 == 0:
-            print(msg.format(i, total_log_like.round(5)))
+        # Maximization step
         pi, m, S = maximization(X, g)
-        g, total_log_like = expectation(X, pi, m, S)
-        if abs(prev_like - total_log_like) <= tol:
+        # Expectation step
+        g, log_like = expectation(X, pi, m, S)
+
+        # Verbose printing
+        if verbose and (i % 10 == 0 or i == iterations - 1):
+            print(msg.format(i + 1, round(log_like, 5)))
+
+        # Check for convergence
+        if abs(log_like - prev_like) <= tol:
             break
-        prev_like = total_log_like
+        prev_like = log_like
 
-    if verbose:
-        print(msg.format(i + 1, total_log_like.round(5)))
-
-    return pi, m, S, g, total_log_like
+    return pi, m, S, g, log_like
