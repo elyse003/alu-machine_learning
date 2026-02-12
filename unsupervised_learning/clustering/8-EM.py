@@ -68,4 +68,3 @@ def expectation_maximization(X, k, iterations=1000, tol=1e-5, verbose=False):
         print(msg.format(i + 1, total_log_like.round(5)))
 
     return pi, m, S, g, log_like
-
