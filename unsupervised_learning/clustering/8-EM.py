@@ -12,6 +12,32 @@ maximization = __import__('7-maximization').maximization
 def expectation_maximization(X, k, iterations=1000, tol=1e-5, verbose=False):
     """
     Performs expectation maximization for a GMM
+
+    Parameters
+    ----------
+    X : numpy.ndarray of shape (n, d)
+        Dataset
+    k : int
+        Number of clusters
+    iterations : int, optional
+        Maximum number of iterations
+    tol : float, optional
+        Tolerance for log likelihood change
+    verbose : bool, optional
+        If True, prints log likelihood progress
+
+    Returns
+    -------
+    pi : numpy.ndarray of shape (k,)
+        Priors for each cluster
+    m : numpy.ndarray of shape (k, d)
+        Centroid means
+    S : numpy.ndarray of shape (k, d, d)
+        Covariance matrices
+    g : numpy.ndarray of shape (k, n)
+        Posterior probabilities
+    l : float
+        Log likelihood of the model
     """
     if not isinstance(X, np.ndarray) or len(X.shape) != 2:
         return None, None, None, None, None
@@ -24,26 +50,22 @@ def expectation_maximization(X, k, iterations=1000, tol=1e-5, verbose=False):
     if not isinstance(verbose, bool):
         return None, None, None, None, None
 
-    # Initialize parameters
-    pi, m, S = initialize(X, k)
-    g, log_like = expectation(X, pi, m, S)
-    prev_like = log_like
-
+     pi, m, S = initialize(X, k)
+    g, l = expectation(X, pi, m, S)
+    prev_like = i = 0
     msg = "Log Likelihood after {} iterations: {}"
 
     for i in range(iterations):
-        # Maximization step
+        if verbose and i % 10 == 0:
+            print(msg.format(i, total_log_like.round(5)))
         pi, m, S = maximization(X, g)
-        # Expectation step
-        g, log_like = expectation(X, pi, m, S)
-
-        # Verbose printing
-        if verbose and (i % 10 == 0 or i == iterations - 1):
-            print(msg.format(i + 1, round(log_like, 5)))
-
-        # Check for convergence
-        if abs(log_like - prev_like) <= tol:
+        g, total_log_like = expectation(X, pi, m, S)
+        if abs(prev_like - total_log_like) <= tol:
             break
-        prev_like = log_like
+        prev_like = total_log_like
+
+    if verbose:
+        print(msg.format(i + 1, total_log_like.round(5)))
 
     return pi, m, S, g, log_like
+
