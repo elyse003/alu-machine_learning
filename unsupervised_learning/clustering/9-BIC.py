@@ -1,68 +1,52 @@
 #!/usr/bin/env python3
-"""
-Expectation Maximization for a Gaussian Mixture Model
-"""
-
+"""This module contains a function that perfoms
+finds the best number of clusters for a GMM using the
+Bayesian Information Criterion"""
 import numpy as np
-initialize = __import__('4-initialize').initialize
-expectation = __import__('6-expectation').expectation
-maximization = __import__('7-maximization').maximization
+expectation_maximization = __import__('8-EM').expectation_maximization
 
 
-def expectation_maximization(X, k, iterations=1000, tol=1e-5, verbose=False):
+def BIC(X, kmin=1, kmax=None, iterations=1000, tol=1e-5, verbose=False):
     """
-    Performs expectation maximization for a GMM
-
-    Parameters
-    ----------
-    X : numpy.ndarray of shape (n, d)
-        Dataset
-    k : int
-        Number of clusters
-    iterations : int, optional
-        Maximum number of iterations
-    tol : float, optional
-        Tolerance for log likelihood change
-    verbose : bool, optional
-        If True, prints log likelihood progress
-
-    Returns
-    -------
-    pi : numpy.ndarray of shape (k,)
-        Priors for each cluster
-    m : numpy.ndarray of shape (k, d)
-        Centroid means
-    S : numpy.ndarray of shape (k, d, d)
-        Covariance matrices
-    g : numpy.ndarray of shape (k, n)
-        Posterior probabilities
-    l : float
-        Log likelihood of the model
+    finds the best number of clusters for a GMM using the
+    Bayesian Information Criterion
     """
     if not isinstance(X, np.ndarray) or len(X.shape) != 2:
-        return None, None, None, None, None
-    if not isinstance(k, int) or k <= 0:
-        return None, None, None, None, None
-    if not isinstance(iterations, int) or iterations <= 0:
-        return None, None, None, None, None
+        return None, None, None, None
+
+    if not isinstance(kmin, int) or kmin < 1:
+        return None, None, None, None
+
+    if not isinstance(kmax, int) or kmax < kmin:
+        return None, None, None, None
+
+    if not isinstance(iterations, int):
+        return None, None, None, None
+
     if not isinstance(tol, float) or tol < 0:
-        return None, None, None, None, None
+        return None, None, None, None
+
     if not isinstance(verbose, bool):
-        return None, None, None, None, None
+        return None, None, None, None
 
-    pi, m, S = initialize(X, k)
-    g, log_like = expectation(X, pi, m, S)
-    prev_like = log_like
+    if kmax is None:
+        kmax = iterations
 
-    for i in range(iterations):
-        pi, m, S = maximization(X, g)
-        g, log_like = expectation(X, pi, m, S)
+    n = X.shape[0]
+    prior_bic = 0
+    likelyhoods = bics = []
+    best_k = kmax
+    pi_prev = m_prev = S_prev = best_res = None
+    for k in range(kmin, kmax + 1):
+        pi, m, S, g, ll = expectation_maximization(X, k, iterations, tol,
+                                                   verbose)
+        bic = k * np.log(n) - 2 * ll
+        if np.isclose(bic, prior_bic) and best_k >= k:
+            best_k = k - 1
+            best_res = pi_prev, m_prev, S_prev
+        pi_prev, m_prev, S_prev = pi, m, S
+        likelyhoods.append(ll)
+        bics.append(bic)
+        prior_bic = bic
 
-        if verbose and (i % 10 == 0 or i == iterations - 1):
-            print(f"Log Likelihood after {i + 1} iterations: {round(log_like, 5)}")
-
-        if abs(log_like - prev_like) <= tol:
-            break
-        prev_like = log_like
-
-    return pi, m, S, g, log_like
+    return best_k, best_res, np.asarray(likelyhoods), np.asarray(bics)
