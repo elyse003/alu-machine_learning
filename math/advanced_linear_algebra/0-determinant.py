@@ -2,6 +2,8 @@
 """Function to calculate the determinant of a matrix"""
 
 
+import utils.transport
+import utils.session
 def determinant(matrix):
     """Calculates the determinant of a matrix"""
     if type(matrix) is not list or len(matrix) == 0:
